@@ -1,0 +1,8 @@
+SELECT Company_name 
+FROM Customer 
+WHERE Company_ref NOT IN 
+  (SELECT DISTINCT Company_ref 
+   FROM Caller
+   WHERE Caller_id NOT IN 
+    (SELECT DISTINCT Caller_id 
+     FROM Issue WHERE Call_date LIKE '2017-08-13%'))  
