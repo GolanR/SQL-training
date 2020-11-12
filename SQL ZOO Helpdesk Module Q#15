@@ -1,0 +1,22 @@
+SET @batch:=0;
+
+WITH "a" AS (
+SELECT Call_date, Caller_id, Taken_by, call_ref FROM Issue ORDER BY Taken_by, Call_date
+),
+"b" AS (
+SELECT Call_date AS call_last, Caller_id AS last_id, Taken_by AS last_by, call_ref+1 AS last_ref FROM Issue ORDER BY Taken_by, Call_date
+),
+"c" AS (
+SELECT *, TIMESTAMPDIFF(minute, "b".call_last, "a".call_date) AS delta FROM "a" JOIN "b" ON call_ref = last_ref
+),
+"d" AS (
+SELECT *,
+  @batch:= CASE
+    WHEN (delta<=10) AND (Caller_id!=last_id) AND (Taken_by=last_by) 
+      THEN @batch
+    ELSE @batch+1
+    END as batch
+ FROM "c" 
+)
+
+SELECT taken_by, MIN(call_date) AS first_call, MAX(call_date) AS latest_call, COUNT(batch) AS calls FROM "d" GROUP BY taken_by, batch ORDER BY calls DESC LIMIT 1
